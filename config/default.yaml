@@ -1,0 +1,67 @@
+input:
+  source: camera
+  camera_index: 0
+  width: 1280
+  height: 720
+  fps: 60.0
+
+roi:
+  height_pct: 0.55
+  top_width_pct: 0.35
+  bottom_width_pct: 1.0
+  angle_max_deg: 18.0
+  bottom_gate_px: 45
+
+preprocess:
+  mode: clahe
+  clahe_clip: 2.0
+  clahe_tile: 8
+  unsharp_amount: 1.3
+  unsharp_radius: 1.0
+  contrast_low: 2.0
+  contrast_high: 98.0
+
+edges:
+  method: bilateral_laplacian
+  bilateral_diameter: 5
+  bilateral_sigma_color: 60.0
+  bilateral_sigma_space: 40.0
+  laplacian_ksize: 3
+  laplacian_scale: 1.0
+  laplacian_threshold: 16
+  adaptive_canny_k: 0.33
+  adaptive_window: 9
+  morph_length: 11
+  dexined_model: ""
+
+lines:
+  rho: 1.0
+  theta_deg: 1.0
+  threshold: 45
+  min_length_frac: 0.32
+  max_gap_frac: 0.015
+  gradient_window: 5
+  gradient_vertical_tol_deg: 12.0
+  ransac_thresh_px: 2.2
+  ransac_votes: 35
+
+tracking:
+  alpha_offset: 0.35
+  alpha_angle: 0.25
+  dropout_frames: 8
+
+performance:
+  queue_size: 4
+  bev_scale: 1.0
+  multi_thread: true
+  use_cuda: false
+
+vp:
+  iterations: 220
+  inlier_thresh_px: 6.0
+  min_votes: 15
+
+viz:
+  pip_scale: 0.28
+  show_debug: true
+  draw_segments: true
