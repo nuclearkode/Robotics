@@ -1,0 +1,13 @@
+# Line Detection Pipeline Dependencies
+# =====================================
+
+# Core dependencies
+numpy>=1.21.0
+opencv-python>=4.5.0
+pyyaml>=6.0
+
+# Optional: CUDA-enabled OpenCV (uncomment if using GPU acceleration)
+# opencv-contrib-python-headless>=4.5.0
+
+# Development/debugging utilities (optional)
+# matplotlib>=3.5.0  # For plotting/visualization

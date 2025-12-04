@@ -1,0 +1,151 @@
+# Line Detection Pipeline Configuration
+# =====================================
+# This configuration file controls all parameters for the line detection pipeline.
+# All parameters can be overridden via command-line arguments.
+
+# Camera settings
+camera:
+  indices: [0, 1, 2]  # Camera indices to try
+  width: 1280
+  height: 720
+  fps: 30
+
+# Calibration file paths (relative to script directory)
+calibration:
+  intrinsics_path: "calibration/camera_model.npz"
+  homography_path: "calibration/ground_plane_h.npz"
+  imu_path: "calibration/imu_alignment.json"
+
+# Preprocessing settings
+preprocessing:
+  # CLAHE (Contrast Limited Adaptive Histogram Equalization)
+  clahe:
+    clip_limit: 2.0
+    tile_grid_size: [8, 8]
+  
+  # Optional unsharp mask (set enabled: true for faint lines)
+  unsharp_mask:
+    enabled: false
+    sigma: 1.0
+    strength: 0.5
+
+# Edge detection settings
+edge_detection:
+  # Method: "bilateral_laplacian" (fast, recommended) or "adaptive_canny"
+  method: "bilateral_laplacian"
+  
+  # Bilateral filter parameters (for bilateral_laplacian method)
+  bilateral:
+    d: 9
+    sigma_color: 75
+    sigma_space: 75
+  
+  # Laplacian parameters
+  laplacian:
+    ksize: 3
+    threshold: 30
+  
+  # Adaptive Canny parameters (for adaptive_canny method)
+  adaptive_canny:
+    block_size: 31
+    c: 5
+
+# Line extraction settings
+line_extraction:
+  # Using constrained HoughLinesP (angle-aware)
+  hough:
+    rho: 1.0
+    theta_deg: 1.0
+    threshold: 40
+    min_line_length_pct: 0.4  # Percentage of min(frame_w, frame_h)
+    max_line_gap_pct: 0.01
+  
+  # Angle filtering (deviation from vertical in degrees)
+  angle_max_deg: 20
+  
+  # Gradient orientation pre-filtering
+  gradient_filter:
+    enabled: true
+    vertical_tolerance_deg: 25
+
+# Segment processing settings
+segment_processing:
+  # Collinearity-based merging
+  merge:
+    angle_tolerance_deg: 5.0
+    gap_pct: 0.01  # Gap as percentage of min dimension
+  
+  # RANSAC line fitting
+  ransac:
+    threshold: 2.0
+    min_inliers: 40
+    iterations: 256
+
+# Vanishing point estimation
+vanishing_point:
+  # Using RANSAC voting instead of O(N²) brute force
+  ransac:
+    enabled: true
+    iterations: 100
+    threshold: 5.0
+
+# Region of Interest settings
+roi:
+  height_pct: 0.55
+  top_width_pct: 0.35
+  bottom_width_pct: 1.0
+  bottom_gate_px: 40
+
+# Tracking settings
+tracking:
+  # Method: "exponential" (recommended, fast) or "kalman_2d"
+  method: "exponential"
+  
+  # Exponential smoothing parameters
+  exponential:
+    alpha: 0.15  # Smoothing factor (0.0-1.0), lower = smoother
+  
+  # Optional 2D Kalman parameters (if method is "kalman_2d")
+  kalman_2d:
+    process_noise: 0.001
+    measurement_noise: 0.004
+  
+  # Debounce settings
+  debounce_rate: 0.08
+
+# Scoring and validation
+scoring:
+  # Mahalanobis covariance diagonals [center_err, angle_err, len_deficit]
+  mahalanobis_cov_diag: [0.0225, 0.0195, 0.0625]  # [0.15², (8°→rad)², 0.25²]
+  
+  # NFA (Number of False Alarms) threshold
+  nfa_min_log10: 2.0
+  
+  # Maximum score for valid detection
+  max_score: 12.0
+
+# Performance settings
+performance:
+  # Cache BEV warp maps (2-3x speedup)
+  cache_warp_maps: true
+  
+  # Multi-threading
+  multithreading:
+    enabled: false  # Set true for +50% throughput
+    queue_size: 4
+  
+  # Use CUDA if available
+  use_cuda: true
+
+# UI settings
+ui:
+  window_size: [1100, 620]
+  pip_scale: 0.28
+  pip_margin: 16
+  show_trackbars: true
+
+# Debug settings
+debug:
+  verbose: false
+  save_frames: false
+  output_dir: "debug_output"
