@@ -1072,8 +1072,8 @@ class LinePipeline:
             # Coarse scale for speed
             small = cv.pyrDown(gray)
             if method == 'bilateral_laplacian':
-                bi_cfg = edge_cfg.get('bilateral', default={})
-                lap_cfg = edge_cfg.get('laplacian', default={})
+                bi_cfg = edge_cfg.get('bilateral', {})
+                lap_cfg = edge_cfg.get('laplacian', {})
                 edges_small = edge_detection_bilateral_laplacian(
                     small,
                     bilateral_d=bi_cfg.get('d', 9),
@@ -1083,13 +1083,13 @@ class LinePipeline:
                     threshold=lap_cfg.get('threshold', 30),
                 )
             else:
-                ac_cfg = edge_cfg.get('adaptive_canny', default={})
+                ac_cfg = edge_cfg.get('adaptive_canny', {})
                 edges_small = edge_detection_adaptive_canny(
                     small,
                     block_size=ac_cfg.get('block_size', 31),
                     c_offset=ac_cfg.get('c_offset', 5),
                 )
-            morph_cfg = edge_cfg.get('morphology', default={})
+            morph_cfg = edge_cfg.get('morphology', {})
             edges_small = morphological_cleanup(
                 edges_small,
                 kernel_length=morph_cfg.get('kernel_length', 7),
@@ -1098,8 +1098,8 @@ class LinePipeline:
         else:
             # Full resolution
             if method == 'bilateral_laplacian':
-                bi_cfg = edge_cfg.get('bilateral', default={})
-                lap_cfg = edge_cfg.get('laplacian', default={})
+                bi_cfg = edge_cfg.get('bilateral', {})
+                lap_cfg = edge_cfg.get('laplacian', {})
                 edges = edge_detection_bilateral_laplacian(
                     gray,
                     bilateral_d=bi_cfg.get('d', 9),
@@ -1109,7 +1109,7 @@ class LinePipeline:
                     threshold=lap_cfg.get('threshold', 30),
                 )
             else:
-                ac_cfg = edge_cfg.get('adaptive_canny', default={})
+                ac_cfg = edge_cfg.get('adaptive_canny', {})
                 edges = edge_detection_adaptive_canny(
                     gray,
                     block_size=ac_cfg.get('block_size', 31),
@@ -1118,7 +1118,7 @@ class LinePipeline:
         
         # Apply ROI and cleanup
         edges = cv.bitwise_and(edges, edges, mask=roi_mask)
-        morph_cfg = edge_cfg.get('morphology', default={})
+        morph_cfg = edge_cfg.get('morphology', {})
         edges = morphological_cleanup(
             edges,
             kernel_length=morph_cfg.get('kernel_length', 9),
@@ -1135,8 +1135,8 @@ class LinePipeline:
         else:
             # Line extraction: Constrained HoughLinesP
             line_cfg = cfg.get('line_extraction', default={})
-            hough_cfg = line_cfg.get('hough', default={})
-            angle_cfg = line_cfg.get('angle_filter', default={})
+            hough_cfg = line_cfg.get('hough', {})
+            angle_cfg = line_cfg.get('angle_filter', {})
             
             segments = extract_lines_constrained_hough(
                 edges,
