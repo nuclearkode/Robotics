@@ -1,0 +1,46 @@
+# Configuration file for long-line detector
+# Edit this file to adjust parameters without modifying code
+
+edge_detection:
+  method: bilateral_laplacian  # Options: bilateral_laplacian, adaptive_canny, learned
+  bilateral_d: 9
+  bilateral_sigma_color: 75
+  bilateral_sigma_space: 75
+  laplacian_ksize: 3
+  adaptive_canny_block_size: 11
+  adaptive_canny_c: 2
+
+preprocessing:
+  method: clahe_only  # Options: clahe_only, clahe_unsharp, contrast_stretch
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size: 8
+  unsharp_strength: 0.5
+
+line_extraction:
+  method: constrained_hough  # Options: constrained_hough, gradient_orientation
+  vote_threshold: 40
+  minlen_pct: 40
+  gap_pct: 1
+  angle_max_deg: 20
+  angle_tolerance_deg: 5.0
+
+tracking:
+  method: exponential_smoothing  # Options: exponential_smoothing, kalman_2d
+  alpha: 0.3  # Smoothing factor (0.0 = no update, 1.0 = no smoothing)
+  process_noise: 1e-3
+  measurement_noise: 4e-3
+
+roi:
+  height_pct: 55
+  topw_pct: 35
+  bottom_gate_px: 40
+
+performance:
+  use_multithreading: true
+  queue_size: 3
+  early_exit_confidence: 0.85
+
+ui:
+  show_controls: true
+  window_width: 1100
+  window_height: 620
