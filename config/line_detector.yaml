@@ -1,0 +1,72 @@
+camera:
+  index: 0
+  width: 1280
+  height: 720
+  intrinsics: calibration/camera_model.npz
+  homography: calibration/ground_plane_h.npz
+  imu_alignment: calibration/imu_alignment.json
+  bev_scale: 1.0
+
+preprocess:
+  mode: clahe
+  clahe:
+    clip_limit: 2.0
+    tile_grid: 8
+  unsharp:
+    enabled: false
+    amount: 0.35
+    sigma: 1.2
+  contrast_stretch:
+    enabled: false
+    low_pct: 2.0
+    high_pct: 98.0
+
+edges:
+  method: bilateral_laplacian
+  vertical_kernel: 13
+  orientation_tol_deg: 15.0
+  bilateral_laplacian:
+    diameter: 7
+    sigma_color: 45.0
+    sigma_space: 7.5
+    laplacian_ksize: 3
+    auto_threshold: true
+    manual_threshold: 18
+  adaptive_canny:
+    block_size: 15
+    offset: 4.0
+    post_blur: 3
+  learned:
+    model_path: models/dexined.onnx
+    input_size: [512, 512]
+    score_thresh: 0.25
+
+lines:
+  vote_threshold: 55
+  min_length_pct: 0.35
+  max_gap_pct: 0.015
+  angle_max_deg: 18.0
+  roi:
+    height_pct: 0.55
+    top_width_pct: 0.35
+    bottom_width_pct: 0.9
+    bottom_gate_px: 40
+  ransac:
+    distance_px: 2.5
+    min_inliers: 45
+    iterations: 256
+
+tracking:
+  alpha_offset: 0.35
+  alpha_angle: 0.4
+  dropout_decay: 0.9
+
+performance:
+  use_threads: true
+  queue_size: 3
+  vp_ransac_iters: 120
+  vp_threshold_px: 24.0
+
+visualization:
+  pip_scale: 0.28
+  confidence_margin: 22
