@@ -1,0 +1,49 @@
+# Configuration file for optimized long-line detector
+# Edit values and restart, or press 's' in the UI to save current settings
+
+edge_detection:
+  method: bilateral_laplacian  # Options: bilateral_laplacian, adaptive_canny, learned
+  bilateral_d: 9
+  bilateral_sigma_color: 75
+  bilateral_sigma_space: 75
+  laplacian_threshold: 30
+
+preprocessing:
+  method: clahe_only  # Options: clahe_only, clahe_unsharp, contrast_stretch
+  clahe_clip_limit: 2.0
+  clahe_tile_size: 8
+
+line_extraction:
+  method: constrained_hough  # Options: constrained_hough, gradient_orientation
+  vote_threshold: 40
+  min_length_pct: 0.40
+  gap_pct: 0.01
+  angle_max_deg: 20
+  angle_tolerance_deg: 5.0
+
+tracking:
+  method: exponential_smoothing  # Options: exponential_smoothing, kalman_2d, kalman_4d
+  alpha: 0.3  # Smoothing factor (0.0-1.0, higher = more responsive)
+  max_innovation_chisq: 9.21
+  debounce_rate: 0.08
+
+roi:
+  height_pct: 0.55
+  top_width_pct: 0.35
+  bottom_gate_px: 40
+
+vanishing_point:
+  method: ransac  # Options: ransac, mean_intersection
+  ransac_iterations: 100
+  ransac_threshold: 10.0
+  min_segments: 2
+
+performance:
+  cache_bev_maps: true  # Pre-compute BEV warp maps for 2-3x speedup
+  multi_threaded: true  # Enable producer/consumer threading (+50% throughput)
+  queue_size: 2
+
+ui:
+  show_trackbars: false  # Use config file instead of trackbars
+  window_width: 1100
+  window_height: 620
