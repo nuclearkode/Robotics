@@ -1,0 +1,48 @@
+# Configuration file for long line detector
+# Edit these values to tune the pipeline
+
+edge_detection:
+  method: bilateral_laplacian  # Options: bilateral_laplacian, adaptive_canny, learned
+  bilateral_d: 9
+  bilateral_sigma_color: 75
+  bilateral_sigma_space: 75
+  laplacian_ksize: 3
+  adaptive_canny_block_size: 11
+  adaptive_canny_c: 2
+
+preprocessing:
+  method: clahe_only  # Options: clahe_only, clahe_unsharp, contrast_stretch
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size: [8, 8]
+  unsharp_strength: 0.5
+  unsharp_sigma: 1.0
+
+line_extraction:
+  method: constrained_hough  # Options: constrained_hough, gradient_orientation
+  vote_threshold: 40
+  minlen_pct: 40
+  gap_pct: 1
+  angle_max_deg: 20
+  vertical_gradient_threshold: 0.7
+
+tracking:
+  method: exponential_smoothing  # Options: exponential_smoothing, kalman_2d, kalman_4d
+  alpha: 0.15  # Smoothing factor (0.0 = no update, 1.0 = instant update)
+  max_innovation_chisq: 9.21
+  debounce_rate: 0.08
+
+roi:
+  height_pct: 55
+  topw_pct: 35
+  bottom_gate_px: 40
+
+performance:
+  cache_bev_maps: true  # Pre-compute BEV warp maps for 2-3x speedup
+  use_multithreading: true  # Enable producer-consumer pattern for +50% throughput
+  queue_size: 2
+
+vanishing_point:
+  method: ransac  # Options: ransac, mean
+  ransac_iterations: 100
+  ransac_threshold: 5.0
+  min_segments: 2
