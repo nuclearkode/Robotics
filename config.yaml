@@ -1,0 +1,83 @@
+# Line Detector Configuration
+# This file configures all parameters for the optimized line detection pipeline.
+
+# Camera settings
+camera:
+  indices: [0, 1, 2]  # Camera indices to try
+  width: 1280
+  height: 720
+  backends: ["CAP_DSHOW", "CAP_MSMF", "DEFAULT"]
+
+# Calibration file paths (relative to script directory)
+calibration:
+  dir: "calibration"
+  intrinsics_file: "camera_model.npz"
+  homography_file: "ground_plane_h.npz"
+  imu_file: "imu_alignment.json"
+
+# Edge detection (Bilateral + Laplacian)
+# This is ~3x faster than percentile Canny (5ms vs 15ms)
+edge_detection:
+  bilateral_d: 9                  # Bilateral filter diameter
+  bilateral_sigma_color: 75       # Bilateral color sigma
+  bilateral_sigma_space: 75       # Bilateral spatial sigma
+  laplacian_ksize: 3              # Laplacian kernel size
+  edge_threshold: 30              # Binary threshold for edges
+
+# Preprocessing (CLAHE only - removed slow Retinex)
+# This is ~4x faster than CLAHE + Retinex (3-4ms vs 12-15ms)
+preprocessing:
+  clahe_clip_limit: 2.0           # CLAHE clip limit
+  clahe_tile_size: 8              # CLAHE tile grid size
+
+# Line extraction (Constrained HoughLinesP - replaces LSD)
+# Pre-filters for vertical gradients, much fewer false positives
+# ~3-5ms vs 10ms for LSD
+line_extraction:
+  hough_rho: 1                    # Hough rho parameter
+  hough_theta_deg: 1.0            # Hough theta in degrees
+  hough_threshold: 40             # Minimum votes for line
+  min_line_length_pct: 40         # Min length as % of min(w,h)
+  max_line_gap_pct: 1             # Max gap as % of min(w,h)
+  angle_max_deg: 20               # Max deviation from vertical
+  vertical_gradient_min: 0.5      # Min vertical gradient ratio for pre-filtering
+
+# Region of Interest
+roi:
+  height_pct: 55                  # ROI height as % of frame
+  top_width_pct: 35               # ROI top width as % of frame
+  bottom_gate_px: 40              # Bottom gate height in pixels
+
+# Tracking (Exponential smoothing - replaces 4D Kalman)
+# ~50% less code, nearly as smooth, only 1 tunable parameter
+tracking:
+  smoothing_alpha: 0.3            # Exponential smoothing factor (0=no smoothing, 1=no filtering)
+  confidence_threshold: 0.6       # Minimum confidence for stable tracking
+  debounce_rate: 0.08             # Maximum change rate per frame
+
+# Vanishing point (RANSAC - replaces O(N²) exhaustive search)
+# ~4-5x faster: 10ms → 2-3ms for 100 segments
+vanishing_point:
+  ransac_iterations: 100          # Number of RANSAC iterations
+  ransac_threshold: 5.0           # Inlier distance threshold
+
+# Scoring thresholds
+scoring:
+  center_error_sigma: 0.15        # Std dev for center error
+  angle_error_sigma_deg: 8.0      # Std dev for angle error (degrees)
+  length_deficit_sigma: 0.25      # Std dev for length deficit
+  max_score: 12.0                 # Maximum acceptable score
+  min_nfa: 2.0                    # Minimum NFA log10 value
+
+# Performance settings
+performance:
+  enable_multithreading: true     # Producer-consumer threading (+50% FPS)
+  frame_queue_size: 2             # Frame buffer size
+  use_cuda_if_available: true     # Use CUDA acceleration if available
+
+# UI settings
+ui:
+  window_width: 1100
+  window_height: 620
+  pip_scale: 0.28                 # Picture-in-picture scale
+  pip_margin: 16                  # PIP margin in pixels
