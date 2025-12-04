@@ -1,0 +1,148 @@
+# Long-Line Detector Configuration
+# ================================
+# YAML config for reproducible experiments
+
+# Camera settings
+camera:
+  indices: [0, 1, 2]
+  width: 1280
+  height: 720
+  backends: ["CAP_DSHOW", "CAP_MSMF", "DEFAULT"]
+
+# Calibration paths
+calibration:
+  intrinsics_path: "calibration/camera_model.npz"
+  homography_path: "calibration/ground_plane_h.npz"
+  imu_path: "calibration/imu_alignment.json"
+
+# Preprocessing (CLAHE only - Retinex removed for 4x speedup)
+preprocessing:
+  clahe:
+    clip_limit: 2.0
+    tile_grid_size: [8, 8]
+  # Unsharp mask (optional, disabled by default)
+  unsharp_mask:
+    enabled: false
+    sigma: 1.0
+    strength: 0.5
+
+# Edge detection (Bilateral + Laplacian replaces Canny + Percentile)
+edge_detection:
+  method: "bilateral_laplacian"  # Options: bilateral_laplacian, adaptive_canny
+  bilateral:
+    d: 9
+    sigma_color: 75
+    sigma_space: 75
+  laplacian:
+    ksize: 3
+    threshold: 30
+  # Adaptive Canny fallback (if needed)
+  adaptive_canny:
+    block_size: 31
+    c_offset: 5
+  # Morphological cleanup
+  morphology:
+    kernel_length: 9
+    iterations: 1
+
+# Line extraction (Constrained HoughLinesP - LSD removed)
+line_extraction:
+  method: "constrained_hough"  # Angle-aware HoughLinesP
+  hough:
+    rho: 1
+    theta_degrees: 1.0
+    threshold: 40
+    min_line_length_pct: 0.40  # Percentage of min(frame_w, frame_h)
+    max_line_gap_pct: 0.01
+  # Angle constraints for vertical line detection
+  angle_filter:
+    max_deviation_from_vertical: 20  # degrees
+    # Pre-filter gradients by orientation (±angle from vertical)
+    gradient_orientation_filter: true
+    orientation_tolerance: 25  # degrees
+
+# Segment merging
+segment_merging:
+  angle_tolerance_deg: 5.0
+  gap_pct: 0.01  # Percentage of min(frame_w, frame_h)
+
+# RANSAC consensus fitting
+ransac:
+  threshold: 2.0
+  min_inliers: 40
+  iterations: 256
+
+# Tracking (Exponential smoothing replaces 4D Kalman - 50% less code)
+tracking:
+  method: "exponential_smoothing"  # Options: exponential_smoothing, kalman_2d
+  exponential_smoothing:
+    alpha_offset: 0.15  # Smoothing factor for lateral offset (0-1)
+    alpha_angle: 0.10   # Smoothing factor for angle (0-1)
+  # State machine
+  state_machine:
+    detection_threshold: 0.6  # Confidence to enter TRACKING
+    lost_threshold: 0.3       # Confidence to enter LOST
+    lost_timeout_frames: 15   # Frames before returning to SEARCHING
+  # Debounce rate limiter
+  debounce_rate: 0.08  # Maximum normalized offset change per frame
+
+# ROI (Region of Interest)
+roi:
+  height_pct: 0.55           # Trapezoid height from bottom
+  top_width_pct: 0.35        # Top width as percentage of frame width
+  bottom_width_pct: 1.0      # Bottom width as percentage of frame width
+  bottom_gate_px: 40         # Bottom band height for coverage prior
+  center_offset_smoothing: 0.2  # ROI center adaptation rate
+
+# Vanishing point estimation (RANSAC voting - O(N²) → O(iterations))
+vanishing_point:
+  method: "ransac_voting"  # Options: ransac_voting, mean_intersection
+  ransac:
+    iterations: 50
+    inlier_threshold: 10.0  # pixels
+    min_inliers: 3
+  bounds:
+    x_min_factor: 0.0   # VP x must be >= x_min_factor * width
+    x_max_factor: 2.0   # VP x must be <= x_max_factor * width
+    y_min_factor: -1.0  # VP y can be above frame
+    y_max_factor: 2.0
+
+# Scoring (Mahalanobis distance)
+scoring:
+  covariance:
+    center_err: 0.15
+    angle_err_deg: 8.0
+    len_deficit: 0.25
+  max_score: 12.0
+  nfa_threshold: 2.0  # log10 NFA minimum
+
+# Performance optimizations
+performance:
+  # BEV warp map caching (2-3x speedup)
+  cache_warp_maps: true
+  # Multi-threading (producer/consumer pattern)
+  multithreading:
+    enabled: true
+    queue_size: 3
+  # CUDA acceleration
+  cuda:
+    enabled: auto  # auto, true, false
+  # Multi-scale processing
+  multiscale:
+    enabled: true
+    confidence_threshold: 0.85  # Skip fine scale if confidence > threshold
+
+# Visualization
+visualization:
+  pip_scale: 0.28
+  pip_margin: 16
+  confidence_bar:
+    width: 220
+    height: 14
+  show_fps: true
+  show_debug_overlay: true
+
+# Logging
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_timing: false
