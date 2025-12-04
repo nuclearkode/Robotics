@@ -1,0 +1,123 @@
+# Line Detection Pipeline Configuration
+# =====================================
+
+# Camera settings
+camera:
+  indices: [0, 1, 2]
+  width: 1280
+  height: 720
+  
+# Calibration file paths (relative to script directory)
+calibration:
+  intrinsics: "calibration/camera_model.npz"
+  homography: "calibration/ground_plane_h.npz"
+  imu_alignment: "calibration/imu_alignment.json"
+
+# Edge detection parameters
+edge_detection:
+  # Bilateral filter parameters (replaces Canny + percentile)
+  bilateral:
+    d: 9                    # Diameter of pixel neighborhood
+    sigma_color: 75         # Filter sigma in the color space
+    sigma_space: 75         # Filter sigma in the coordinate space
+  # Laplacian parameters
+  laplacian:
+    ksize: 3                # Kernel size (must be odd: 1, 3, 5, 7)
+    threshold: 25           # Threshold for edge detection
+
+# Preprocessing (CLAHE-only, no Retinex)
+preprocessing:
+  clahe:
+    clip_limit: 2.0         # Contrast limiting threshold
+    tile_grid_size: [8, 8]  # Size of grid for histogram equalization
+  # Optional unsharp mask (set enabled: false to disable)
+  unsharp_mask:
+    enabled: false
+    sigma: 1.0
+    strength: 0.5
+
+# Line extraction (Constrained HoughLinesP, no LSD)
+line_extraction:
+  hough:
+    rho: 1                  # Distance resolution in pixels
+    theta_deg: 1.0          # Angle resolution in degrees
+    threshold: 40           # Minimum votes
+    min_line_length_pct: 40 # Minimum line length as % of min(width, height)
+    max_line_gap_pct: 1     # Maximum gap between line segments (% of min dim)
+  # Angle constraints for near-vertical lines
+  angle_constraints:
+    max_deviation_from_vertical: 20  # Maximum angle deviation from vertical (degrees)
+    # Gradient orientation pre-filter
+    gradient_filter:
+      enabled: true
+      vertical_tolerance_deg: 30     # Accept gradients within this angle of vertical
+
+# ROI (Region of Interest) settings
+roi:
+  height_pct: 55            # Trapezoid height from bottom (%)
+  top_width_pct: 35         # ROI top width (% of frame width)
+  bottom_width_pct: 100     # ROI bottom width (% of frame width)
+  bottom_gate_px: 40        # Bottom band height for coverage prior
+
+# Tracking (Exponential smoothing replaces 4D Kalman)
+tracking:
+  exponential_smoothing:
+    alpha: 0.3              # Smoothing factor (0 = no update, 1 = no smoothing)
+    velocity_alpha: 0.1     # Velocity smoothing factor
+  # State machine parameters
+  state_machine:
+    lost_threshold: 5       # Frames without detection before LOST state
+    search_threshold: 15    # Frames in LOST before SEARCHING state
+  # Debounce settings
+  debounce:
+    max_rate: 0.08          # Maximum normalized offset change per frame
+
+# Scoring parameters (Mahalanobis)
+scoring:
+  mahalanobis:
+    center_std: 0.15        # Standard deviation for center error
+    angle_std_deg: 8.0      # Standard deviation for angle error (degrees)
+    length_std: 0.25        # Standard deviation for length deficit
+  max_score: 12.0           # Maximum acceptable Mahalanobis score
+  # NFA (Number of False Alarms) threshold
+  nfa_min_log10: 2.0        # Minimum -log10(NFA) for valid detection
+
+# RANSAC parameters
+ransac:
+  # Line fitting
+  line:
+    threshold: 2.0          # Inlier distance threshold (pixels)
+    min_inliers: 40         # Minimum number of inliers
+    iterations: 256         # Maximum RANSAC iterations
+  # Vanishing point estimation
+  vanishing_point:
+    enabled: true
+    iterations: 100         # RANSAC iterations for VP
+    threshold: 10.0         # Inlier threshold (pixels)
+    min_inliers: 3          # Minimum segments for valid VP
+
+# Segment merging parameters
+segment_merging:
+  angle_tolerance_deg: 5.0  # Maximum angle difference for collinear segments
+  gap_pct: 1.0              # Maximum gap as % of min(width, height)
+
+# Performance optimizations
+performance:
+  # BEV warp map caching
+  cache_warp_maps: true
+  # Multi-threading (producer-consumer pattern)
+  multithreading:
+    enabled: true
+    queue_size: 3           # Frame buffer size
+  # CUDA acceleration (auto-detect if not specified)
+  use_cuda: auto
+
+# Display/Debug settings
+display:
+  window_width: 1100
+  window_height: 620
+  pip_scale: 0.28           # Picture-in-picture scale
+  pip_margin: 16
+  confidence_bar:
+    width: 220
+    height: 14
